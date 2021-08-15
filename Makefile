@@ -5,5 +5,5 @@ all:
 	-v run a.v
 
 fmt:
-	v fmt -w main.v
+	v fmt -w *.v
 	v fmt -w vasm/*.v
