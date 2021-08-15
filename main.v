@@ -3,13 +3,13 @@ import os
 import encoding.hex
 
 const example_program = '
-mov rax, 33
+mov eax, 33
 syscall
 label:
 int 0x80
 nop
 jmp label
-mov rax, 21
+mov eax, 21
 '
 
 fn slurp_file(b string) string {
@@ -49,7 +49,6 @@ fn main() {
 	cstr := if args.len > 1 { slurp_file(args[1..].join(' ')) } else { example_program }
 	a := if is_arm64 { vasm.new_arm64(resolver) } else { vasm.new_amd64(resolver) }
 	mut bb := a.assemble(cstr) or { panic(err) }
-	bb.patch_relocs()
 	println(hex.encode(bb.code))
 	println(bb.to_cstring())
 	// dump(bb)

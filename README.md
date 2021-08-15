@@ -22,7 +22,7 @@ This library aims to provide the interface to generate native code out of a stri
 This is an example on how to use the main program:
 
 ```
-$ v run main.v mov rax, 33
+$ v run main.v mov eax, 33
 b800000021
 
 $ v run main.v test.amd64.asm
@@ -30,3 +30,77 @@ b8000000210f05cd8090ebfbb800000015
 ```
 
 ## Using the API
+
+```v
+
+module main
+
+import vasm
+import os
+
+fn main() {
+	if os.args.len > 1 {
+		os.system('v run example.v | v fmt - > a.v')
+		res := os.system('v run a.v')
+		eprintln(res)
+		return
+	}
+	asmcode := '
+		mov edi, %res
+		mov eax, %myvar
+		syscall
+		mov %res, eax
+	'
+	resolver := fn (a string) &vasm.AsmLabel {
+		if a == 'myvar' {
+			return &vasm.AsmLabel{name: a, off: 8}
+		}
+		if a == 'res' {
+			return &vasm.AsmLabel{name: a, off: 4}
+		}
+		return 0
+	}
+	mut vcode := 'fn main() {
+		myvar := \$if macos { 0x2000001 } \$else { 1 }
+		mut res := 42
+		asm amd64 {
+	'
+	a := vasm.new_amd64(resolver)
+	bb := a.assemble(asmcode) or {panic(err)}
+	vcode += bb.to_cstring()
+	println("$vcode
+		}
+		println(res)
+	}
+	")
+}
+
+```
+
+outputs:
+
+```v
+$ v run example.v | v fmt - > b.v
+$ cat b.v
+fn main() {
+	myvar := $if macos { 0x2000001 } $else { 1 }
+	mut res := 42
+	asm amd64 {
+		mov edi, myvar
+		mov eax, eax
+		syscall
+		mov res, eax
+		; =r (res)
+		; r (myvar)
+	}
+	println(res)
+}
+```
+
+Runs like this:
+
+```
+$ v run b.v
+$ echo $?
+42
+```

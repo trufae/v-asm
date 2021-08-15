@@ -68,10 +68,10 @@ pub fn (target AsmTargetAmd64) assemble_insn(mut block AsmBlock, code []string) 
 			}
 			return [byte(0x48 + reg), 0x8d, 0x05, 0, 0, 0, 0]
 		}
-		'mov' { // mov reg, imm
+		'movl', 'mov' { // mov reg, imm
 			t.check_syntax(code, 2, [.reg, .imm]) or {
-				t.check_syntax(code, 2, [.svar, .reg]) or {
-					t.check_syntax(code, 2, [.reg, .svar]) ?
+				t.check_syntax(code, 2, [.loc, .reg]) or {
+					t.check_syntax(code, 2, [.reg, .loc]) ?
 					varname := code[2][1..]
 					varnode := target.resolve(varname)
 					if varnode.name != '' {
@@ -120,14 +120,14 @@ pub fn new_amd64(res AsmResolver) AsmTarget {
 	mut target := AsmTargetAmd64{
 		resolve: res
 		cpuregs: [
-			'rax',
-			'rcx',
-			'rdx',
-			'rbx',
-			'rsp',
-			'rbp',
-			'rsi',
-			'rdi',
+			'eax',
+			'ecx',
+			'edx',
+			'ebx',
+			'esp',
+			'ebp',
+			'esi',
+			'edi',
 		]
 	}
 	return target

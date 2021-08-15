@@ -42,7 +42,7 @@ struct AsmReloc {
 }
 
 enum AsmArg {
-	svar // stack variable
+	loc // stack variable
 	reg
 	imm
 	imm8
@@ -61,7 +61,7 @@ fn (target AsmTarget) check_syntax(code []string, nargs int, argtyp []AsmArg) ? 
 			.reg {
 				if cod in target.cpuregs {
 				} else {
-					return error('invalid register name for $ins')
+					return error('invalid register name $cod for $ins')
 				}
 			}
 			.imm {
@@ -81,9 +81,9 @@ fn (target AsmTarget) check_syntax(code []string, nargs int, argtyp []AsmArg) ? 
 			.adr, .adr8 {
 				// no checks at assembly time, relocation must happen later
 			}
-			.svar {
+			.loc {
 				// maybe check with a callback or function from the interface?
-				if cod[0] != `$` {
+				if cod[0] != `%` {
 					return error('not a variable')
 				}
 			}
@@ -142,7 +142,7 @@ pub fn (mut block AsmBlock) patch_relocs() {
 }
 
 pub fn (block AsmBlock) to_cstring() string {
-	codestr := block.codestr.replace('$', '')
+	codestr := block.codestr.replace('%', '')
 	mut r := '$codestr\n'
 	if block.outputs.len > 0 {
 		r += '; '
@@ -152,8 +152,17 @@ pub fn (block AsmBlock) to_cstring() string {
 	}
 	if block.inputs.len > 0 {
 		r += '; '
-		for o in block.inputs {
-			r += ' r($o.name)\n'
+		for i in block.inputs {
+			mut available := true
+			for o in block.outputs {
+				if i.name == o.name {
+					available = false
+					break
+				}
+			}
+			if available {
+				r += ' r($i.name)\n'
+			}
 		}
 	}
 	return r
@@ -203,5 +212,6 @@ pub fn (target AsmTarget) assemble(code string) ?AsmBlock {
 			block.codestr += '$w\n'
 		}
 	}
+	block.patch_relocs()
 	return block
 }

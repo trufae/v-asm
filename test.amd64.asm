@@ -1,8 +1,8 @@
-	mov rax, 33
+	mov eax, 33
 	syscall;nop;nop
 label:
 	int 0x80
-	mov rax, $myvar
+	mov eax, %myvar
 	nop
 	jmp label
-	mov rax, 21
+	mov eax, 21
