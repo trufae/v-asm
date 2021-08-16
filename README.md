@@ -29,6 +29,12 @@ $ v run main.v test.amd64.asm
 b8000000210f05cd8090ebfbb800000015
 ```
 
+To target arm64 use the following flag:
+
+```
+$ v run main.v -arm64 test.arm64.asm
+```
+
 ## Using the API
 
 ```v
