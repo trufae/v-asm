@@ -23,6 +23,21 @@ pub fn (target AsmTargetAmd64) assemble_insn(mut block AsmBlock, code []string) 
 			t.check_syntax(code, 0, []) ?
 			return [byte(0x0f), 0x05]
 		}
+		'call' { // call
+			t.check_syntax(code, 1, [.reg]) or {
+				// assume saddr here
+				block.relocs << AsmReloc{
+					typ: .rel
+					off: block.code.len + 1
+					name: code[1]
+					siz: 4
+					delta: 5
+				}
+				return [byte(0xe8), 0, 0,0, 0]
+			}
+			reg := target.cpuregs.index(code[1])
+			return [byte(0xff), byte(0xd0 + reg)]
+		}
 		'jmp' { // jmp
 			t.check_syntax(code, 1, [.imm8]) or { return err }
 			// only short jump for now
@@ -43,6 +58,10 @@ pub fn (target AsmTargetAmd64) assemble_insn(mut block AsmBlock, code []string) 
 		'int3' { // int3
 			t.check_syntax(code, 0, []) or { return err }
 			return [byte(0xcc)]
+		}
+		'ret' { // ret
+			t.check_syntax(code, 0, []) or { return err }
+			return [byte(0xc3)]
 		}
 		'push' { // push reg|imm
 			t.check_syntax(code, 1, [.reg]) or {
