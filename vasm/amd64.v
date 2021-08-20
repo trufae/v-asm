@@ -11,6 +11,14 @@ pub fn (target AsmTargetAmd64) assemble_insn(mut block AsmBlock, code []string) 
 	//
 	// fn (mut block AsmBlock) assemble_instruction(code []string) ?[]byte {
 	match code[0] {
+		'sti' {
+			t.check_syntax(code, 0, []) ?
+			return [byte(0xfb)]
+		}
+		'cli' {
+			t.check_syntax(code, 0, []) ?
+			return [byte(0xfa)]
+		}
 		'cpuid' {
 			t.check_syntax(code, 0, []) ?
 			return [byte(0x0f), 0xa2]
